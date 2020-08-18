@@ -72,7 +72,7 @@ for row in df.iterrows() :
     df['icuIncrease'] = df['inIcuCumulative'] - df['yadda']
 
 df= States_Won(df)
-df_election = State_Pop(df)
+df= State_Pop(df)
 
 States = Make_State_Dict()
 
@@ -125,45 +125,61 @@ app.layout = html.Div([
             ),
         
     html.Div([
-        html.Div([
-            html.H3('National Cases'),
-            dcc.Graph(id='NatCase', figure= Make_National_Cases(df))
-        ], className="six columns"
-    ),
+        dcc.Graph(id='Nat', figure = Make_National(df))
+        ],
+        style={
 
-        html.Div([
-            html.H3('National Deaths'),
-            dcc.Graph(id='NatDeath', figure= Make_National_Deaths(df))
-            ], className="six columns"),
-            ], className="row"
-        
-    ),
+            'height': 500,
+            'width': 1200,
+            "display": "block",
+            "margin-left": "auto",
+            "margin-right": "auto",
+            'margin-bottom':'auto'
+            }
+        ),
+
 
     html.Div([
-        html.Div([
-            #html.H3('Red v Blue States Cases per 1M Population'),
-            dcc.Graph(id='R_B_Case', figure= Make_R_B_National_Scaled_c(df_election))
-        ], className="six columns"
-    ),
+        dcc.Graph(id='R_B', figure = Make_R_B_National(df))
+        ],
+        style={
 
-        html.Div([
-            #html.H3('Red v Blue States Deaths per 1M Population'),
-            dcc.Graph(id='R_B_Death', figure= Make_R_B_National_Scaled_d(df_election))
-            ], className="six columns"),
-            ], className="row"
-        
-    ),
+            'height': 500,
+            'width': 1200,
+            "display": "block",
+            "margin-left": "auto",
+            "margin-right": "auto",
+            'margin-bottom':'auto'
+            }
+        ),
+
+    
+    html.Div([
+        dcc.Graph(id='R_B_Sum', figure = Make_R_B_Sum(df))
+        ],
+        style={
+
+            'height': 500,
+            'width': 1200,
+            "display": "block",
+            "margin-left": "auto",
+            "margin-right": "auto",
+            'margin-bottom':'auto'
+            }
+        ),
+
 
         html.H2('State Outlook:',style={
         'textAlign': 'left',
         'width' : '49%',
         'color': colors['text_sec']}
-    ),
+            ),
 
         
     html.H3('Please Select State',style={
         'textAlign': 'left',
-        'width' : '49%'}        
+        'width' : '49%',
+        'color':colors['text']}        
         ),
     
     
@@ -174,18 +190,19 @@ app.layout = html.Div([
         clearable =False,
         style={'width': '49%', 'padding': '0px 20px 20px 20px'}
        ),
+    
     html.Div([
-        html.Div([
-            html.H3('Statewide New Cases'),
-            dcc.Graph(id='StCase', figure= Make_State_Cases(df,'UT'))
-        ], className="six columns"
-            ),
+        dcc.Graph(id='State', figure = Make_State(df,'UT'))
+        ],
+        style={
 
-        html.Div([
-            html.H3('Statewide New Deaths'),
-            dcc.Graph(id='StDeath', figure= Make_State_Deaths(df,'UT'))
-            ], className="six columns"),
-          ], className="row"
+            'height': 500,
+            'width': 1200,
+            "display": "block",
+            "margin-left": "auto",
+            "margin-right": "auto",
+            'margin-bottom':'auto'
+            }
         ),
     
     html.Div([
@@ -225,8 +242,7 @@ app.layout = html.Div([
 
 @app.callback([
     dash.dependencies.Output('Test_Plot','figure'),
-    dash.dependencies.Output('StCase','figure'), 
-    dash.dependencies.Output('StDeath','figure')
+    dash.dependencies.Output('State','figure'), 
         ],
     [dash.dependencies.Input('States Dropdown', 'value')]
     )
@@ -237,9 +253,8 @@ def Update_State_Plots(value):
         Make_Test_Plot(df,state_of_choice),
         
    
-        Make_State_Cases(df,state_of_choice),
+        Make_State(df,state_of_choice),
     
-        Make_State_Deaths(df,state_of_choice)
         )
  
 
@@ -249,7 +264,10 @@ def Update_State_Plots(value):
 if __name__ == '__main__':
     app.run_server(debug=True,port=8020)
     
-    
+
+
+
+
     
     
     

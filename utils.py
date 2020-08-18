@@ -19,7 +19,17 @@ from plotly.graph_objs.scatter.marker import Line
 
 from plotly.subplots import make_subplots
 
-
+color = {
+    '7-day': 'Black',
+    '20-day': 'Forestgreen',
+    'Bar': 'slategray',
+    'Bar2': 'Red',
+    'Clinton': 'DodgerBlue',
+    'Clinton7':'MidnightBlue',
+    'Trump': 'Red',
+    'Trump7': 'FireBrick'
+    
+}
 
 #%%
 
@@ -46,230 +56,8 @@ def State_Subset(df,state_abbrev, start_date = '2020-03-01') :
     
     return new_df
 
-#%%
-
-def Make_National_Cases(df):
-    national_cases = df.groupby('date')['positiveIncrease'].sum().reset_index()
-    
-    national_cases['date'] = national_cases.date.dt.strftime('%Y-%m-%d')
-    Roll_Avg(national_cases, 'positiveIncrease', [7,20],shift=False)
-    
-    # print(national_cases['date'], national_cases['positiveIncrease'])
-    
-    fig = go.Figure()
-    
-    fig.add_trace(
-        go.Bar(x=national_cases['date'],
-                y=national_cases['positiveIncrease'],
-                marker=dict(color='slategray'),
-                name='National Daily Case Increase'
-                )
-    )
-    
-    
-    fig.add_trace(
-        go.Line(x=national_cases['date'],
-                y=national_cases['roll_positiveIncrease_7'],
-                marker=dict(color='DodgerBlue'),
-                line=dict(width=4),
-                name='7-Day Average'
-                )
-        
-    )
-
-    fig.add_trace(
-        go.Line(x=national_cases['date'],
-                y=national_cases['roll_positiveIncrease_20'],
-                marker=dict(color='Red'),
-                line=dict(width=2),
-                name='20-Day Average'
-                )
-        
-    )
-    
-    
-    fig.update_layout(height=500, width=600,title='National New Cases per Day',
-                      title_x=0.5,
-                      xaxis_title='Date',
-                      yaxis_title='New Cases',
-                      legend=dict(
-                              yanchor="top",
-                              y=0.99,
-                              xanchor="left",
-                              x=0.01)
-    )     
-    return fig
-
-#%%
-
-def Make_National_Deaths(df) :
-    
-    national_deaths = df.groupby('date')['deathIncrease'].sum().reset_index()
-    
-    national_deaths['date'] = national_deaths.date.dt.strftime('%Y-%m-%d')
-    Roll_Avg(national_deaths, 'deathIncrease', [7,20],shift=False)
-    
-    # print(national_cases['date'], national_cases['positiveIncrease'])
-    
-    fig = go.Figure()
-    
-    fig.add_trace(
-        go.Bar(x=national_deaths['date'],
-                y=national_deaths['deathIncrease'],
-                marker=dict(color='slategray'),
-                name='National Daily Case Increase'
-                )
-    )
-    
-    
-    fig.add_trace(
-        go.Line(x=national_deaths['date'],
-                y=national_deaths['roll_deathIncrease_7'],
-                marker=dict(color='DodgerBlue'),
-                line=dict(width=4),
-                name='7-Day Average'
-                )
-        
-    )
-
-    fig.add_trace(
-        go.Line(x=national_deaths['date'],
-                y=national_deaths['roll_deathIncrease_20'],
-                marker=dict(color='Red'),
-                line=dict(width=2),
-                name='20-Day Average'
-                )
-        
-    )
-    
-    
-    fig.update_layout(height=500, width=600,title='National Deaths per Day',
-                      title_x=0.5,
-                      xaxis_title='Date',
-                      yaxis_title='New Deaths',
-                      legend=dict(
-                              yanchor="top",
-                              y=0.99,
-                              xanchor="left",
-                              x=0.01)
-    )
-    return fig
-
-#%%
 
 
-def Make_State_Cases(df,state_of_choice):
-    
-    new_df = State_Subset(df,state_of_choice)
-    interval = [7,20]#sets the intervals for the rolling averages
-    state_cases = new_df.groupby('date')['positiveIncrease'].sum().reset_index()
-    
-    state_cases['date'] = state_cases.date.dt.strftime('%Y-%m-%d')
-    Roll_Avg(state_cases, 'positiveIncrease', interval,shift=False)
-    
-    # print(national_cases['date'], national_cases['positiveIncrease'])
-    
-    fig = go.Figure()
-    
-    fig.add_trace(
-        go.Bar(x=state_cases['date'],
-                y=state_cases['positiveIncrease'],
-                marker=dict(color='slategray'),
-                name= str(state_of_choice) + ' Daily Case Increase'
-                )
-    )
-    
-    
-    fig.add_trace(
-        go.Line(x=state_cases['date'],
-                y=state_cases['roll_positiveIncrease_7'],
-                marker=dict(color='DodgerBlue'),
-                line=dict(width=4),
-                name='7-Day Average'
-                )
-        
-    )
-    
-    fig.add_trace(
-        go.Line(x=state_cases['date'],
-                y=state_cases['roll_positiveIncrease_20'],
-                marker=dict(color='Red'),
-                line=dict(width=2),
-                name='20-Day Average'
-                )
-        
-    )
-    
-    
-    fig.update_layout(height=500, width=600,title=str(state_of_choice)+ ' New Cases per Day',
-                      title_x=0.5,
-                      xaxis_title='Date',
-                      yaxis_title='New Cases',
-                      legend=dict(
-                              yanchor="top",
-                              y=0.99,
-                              xanchor="right",
-                              x=0.5)
-    )     
-    return fig
-
-#%%
-
-
-def Make_State_Deaths(df,state_of_choice) :
-    
-    new_df = State_Subset(df,state_of_choice)
-    interval = [7,20]#sets the intervals for the rolling averages
-    state_deaths = new_df.groupby('date')['deathIncrease'].sum().reset_index()
-    
-    
-    state_deaths['date'] = state_deaths.date.dt.strftime('%Y-%m-%d')
-    Roll_Avg(state_deaths, 'deathIncrease', interval,shift=False)
-    
-    # print(national_cases['date'], national_cases['positiveIncrease'])
-    
-    fig = go.Figure()
-    
-    fig.add_trace(
-        go.Bar(x=state_deaths['date'],
-                y=state_deaths['deathIncrease'],
-                marker=dict(color='slategray'),
-                name= str(state_of_choice)+' Daily Case Increase'
-                )
-    )
-    
-    
-    fig.add_trace(
-        go.Line(x=state_deaths['date'],
-                y=state_deaths['roll_deathIncrease_7'],
-                marker=dict(color='FireBrick'),
-                line=dict(width=4),
-                name='7-Day Average'
-                )
-        
-    )
-    fig.add_trace(
-        go.Line(x=state_deaths['date'],
-                y=state_deaths['roll_deathIncrease_20'],
-                marker=dict(color='DodgerBlue'),
-                line=dict(width=4),
-                name='20-Day Average'
-                )
-        
-    )
-    
-    
-    fig.update_layout(height=500, width=600,title=str(state_of_choice)+' Deaths per Day',
-                      title_x=0.5,
-                      xaxis_title='Date',
-                      yaxis_title='New Deaths',
-                      legend=dict(
-                              yanchor="top",
-                              y=0.99,
-                              xanchor="right",
-                              x=0.5)
-    )
-    return fig
 
 #%%
 
@@ -295,7 +83,7 @@ def Make_Test_Plot(df,state_of_choice) :
     fig.add_trace(
         go.Bar(x=new_df['date'],
                y=new_df['totalTestResultsIncrease'],
-               marker=dict(color='slategray'),
+               marker=dict(color=color['Bar']),
                name='Total Tests',
                legendgroup = 'Tests',
                offsetgroup=0
@@ -308,7 +96,7 @@ def Make_Test_Plot(df,state_of_choice) :
     fig.add_trace(
         go.Bar(x=new_df['date'],
                y=new_df['positiveIncrease'],
-               marker=dict(color='Red'),
+               marker=dict(color=color['Bar2']),
                name='Positive Tests',
                offsetgroup=0,
                legendgroup = 'Cases'
@@ -384,7 +172,8 @@ def Make_Test_Plot(df,state_of_choice) :
     )
     # Update Axis labels and range
     fig.update_yaxes(title_text="Tests", secondary_y=False)
-    fig.update_yaxes(title_text="Infection Rate (%)",secondary_y=True, range=[0,50])   
+    fig.update_yaxes(title_text="Infection Rate (%)",secondary_y=True, range=[0,50]) 
+    fig.update_xaxes(title_text="Date")
     return fig
 
 #%%
@@ -406,7 +195,7 @@ def Make_State(df,state_of_choice):
     
     # print(national_cases['date'], national_cases['positiveIncrease'])
     
-    fig = make_subplots(rows=2, cols=1,
+    fig = make_subplots(rows=1, cols=2,
                         subplot_titles = [str(state_of_choice)+ ' Cases per Day'
                                           , str(state_of_choice)+ ' Deaths per Day'],
                         )
@@ -414,8 +203,9 @@ def Make_State(df,state_of_choice):
     fig.add_trace(
         go.Bar(x=state_cases['date'],
                 y=state_cases['positiveIncrease'],
-                marker=dict(color='slategray'),
-                name= str(state_of_choice) + ' Daily Case Increase'
+                marker=dict(color=color['Bar']),
+                legendgroup='Bars',
+                name= str(state_of_choice) + ' Daily Increase'
                 ),row=1,col=1
     )
     
@@ -423,8 +213,9 @@ def Make_State(df,state_of_choice):
     fig.add_trace(
         go.Line(x=state_cases['date'],
                 y=state_cases['roll_positiveIncrease_7'],
-                marker=dict(color='DodgerBlue'),
+                marker=dict(color=color['7-day']),
                 line=dict(width=4),
+                legendgroup='7Day',
                 name='7-Day Average'
                 ),row=1,col=1
         
@@ -433,47 +224,65 @@ def Make_State(df,state_of_choice):
     fig.add_trace(
         go.Line(x=state_cases['date'],
                 y=state_cases['roll_positiveIncrease_20'],
-                marker=dict(color='Red'),
+                marker=dict(color=color['20-day']),
                 line=dict(width=2),
+                legendgroup='20Day',
                 name='20-Day Average'
                 ),row=1,col=1
         
     )
     
     
+    fig.update_yaxes(title_text="New Cases")
+ 
+    fig.update_xaxes(title_text="Date")
     
     fig.add_trace(
         go.Bar(x=state_deaths['date'],
                 y=state_deaths['deathIncrease'],
-                marker=dict(color='slategray'),
+                marker=dict(color=color['Bar']),
+                legendgroup='Bars',
+                showlegend=False,
                 name= str(state_of_choice)+' Daily Deaths Increase'
-                ),row=2,col=1
+                ),row=1,col=2
     )
     
     
     fig.add_trace(
         go.Line(x=state_deaths['date'],
                 y=state_deaths['roll_deathIncrease_7'],
-                marker=dict(color='FireBrick'),
+                marker=dict(color=color['7-day']),
                 line=dict(width=2),
+                legendgroup='7Day',
+                showlegend=False,
                 name='7-Day Average'
-                ),row=2,col=1
+                ),row=1,col=2
         
     )
     fig.add_trace(
         go.Line(x=state_deaths['date'],
                 y=state_deaths['roll_deathIncrease_20'],
-                marker=dict(color='MidnightBlue'),
+                marker=dict(color=color['20-day']),
                 line=dict(width=2),
+                legendgroup='20Day',
+                showlegend=False,
                 name='20-Day Average'
-                ),row=2,col=1
+                ),row=1,col=2
         
     )
     
 
-    fig.update_layout(height=500, width=600, 
-                      title_text="Statewide Outlook"
-    )          
+    fig.update_layout(
+                title_text= str(state_of_choice) + " Cases and Deaths",
+                title_x = 0.5,
+                xaxis_title='Date',
+                yaxis_title='New Deaths',                
+                legend=dict(
+                               yanchor="top",
+                               y=0.99,
+                               xanchor="left",
+                               x=0.01,),
+                    )         
     
     return fig
     
@@ -488,7 +297,7 @@ def Make_National(df) :
     Roll_Avg(national_cases, 'positiveIncrease', [7,20],shift=False)
     
     # print(national_cases['date'], national_cases['positiveIncrease'])
-    fig = make_subplots(rows=2, cols=1,
+    fig = make_subplots(rows=1, cols=2,
                     subplot_titles = ['National Cases per Day'
                                           , 'National Deaths per Day'],
                         )
@@ -496,7 +305,8 @@ def Make_National(df) :
     fig.add_trace(
         go.Bar(x=national_cases['date'],
                 y=national_cases['positiveIncrease'],
-                marker=dict(color='slategray'),
+                marker=dict(color=color['Bar']),
+                legendgroup = 'Bar',
                 name='National Daily Case Increase'
                 ),row=1,col=1
     )
@@ -505,8 +315,9 @@ def Make_National(df) :
     fig.add_trace(
         go.Line(x=national_cases['date'],
                 y=national_cases['roll_positiveIncrease_7'],
-                marker=dict(color='DodgerBlue'),
+                marker=dict(color=color['7-day']),
                 line=dict(width=4),
+                legendgroup = '7Avg',
                 name='7-Day Average'
                 ),row=1,col=1
         
@@ -515,13 +326,19 @@ def Make_National(df) :
     fig.add_trace(
         go.Line(x=national_cases['date'],
                 y=national_cases['roll_positiveIncrease_20'],
-                marker=dict(color='Red'),
+                marker=dict(color=color['20-day']),
                 line=dict(width=2),
+                legendgroup = '20Avg',
                 name='20-Day Average'
                 ),row=1,col=1
         
     )
-    
+
+    fig.update_yaxes(title_text="New Cases")
+ 
+    fig.update_xaxes(title_text="Date")
+
+
     national_deaths = df.groupby('date')['deathIncrease'].sum().reset_index()
     
     national_deaths['date'] = national_deaths.date.dt.strftime('%Y-%m-%d')
@@ -533,38 +350,50 @@ def Make_National(df) :
     fig.add_trace(
         go.Bar(x=national_deaths['date'],
                 y=national_deaths['deathIncrease'],
-                marker=dict(color='slategray'),
+                marker=dict(color=color['Bar']),
+                legendgroup = 'Bar',
                 showlegend=False,
+                
                 name='National Daily Case Increase'
-                ),row=2, col=1
+                ),row=1, col=2
     )
     
     
     fig.add_trace(
         go.Line(x=national_deaths['date'],
                 y=national_deaths['roll_deathIncrease_7'],
-                marker=dict(color='DodgerBlue'),
+                marker=dict(color= color['7-day']),
                 showlegend=False,
+                legendgroup = '7Avg',
                 line=dict(width=4),
                 name='7-Day Average'
-                ),row=2, col=1
+                ),row=1, col=2
         
     )
 
     fig.add_trace(
         go.Line(x=national_deaths['date'],
                 y=national_deaths['roll_deathIncrease_20'],
-                marker=dict(color='Red'),
+                marker=dict(color= color['20-day']),
                 showlegend=False,
+                legendgroup = '20Avg',
                 line=dict(width=2),
                 name='20-Day Average'
-                ),row=2, col=1
+                ),row=1, col=2
         
     )
         
-    fig.update_layout(height=500, width=600,
-                title_text="National Outlook"
-                )
+    fig.update_layout(
+                title_text="National Cases and Deaths",
+                title_x = 0.5,
+                xaxis_title='Date',
+                yaxis_title='New Deaths',                
+                legend=dict(
+                               yanchor="top",
+                               y=0.99,
+                               xanchor="left",
+                               x=0.01,),
+                    )
 
     return fig
     
@@ -575,8 +404,7 @@ def Make_State_Dict():
         
     States = [{'label': 'Alaska', 'value': 'AK'}, 
               {'label': 'Alabama', 'value': 'AL'}, 
-              {'label': 'Arkansas', 'value': 'AR'}, 
-              {'label': 'American Samoa', 'value': 'AS'}, 
+              {'label': 'Arkansas', 'value': 'AR'},  
               {'label': 'Arizona', 'value': 'AZ'}, 
               {'label': 'California', 'value': 'CA'}, 
               {'label': 'Colorado', 'value': 'CO'}, 
@@ -585,7 +413,6 @@ def Make_State_Dict():
               {'label': 'Delaware', 'value': 'DE'}, 
               {'label': 'Florida', 'value': 'FL'}, 
               {'label': 'Georgia', 'value': 'GA'}, 
-              {'label': 'Guam', 'value': 'GU'}, 
               {'label': 'Hawaii', 'value': 'HI'},
               {'label': 'Iowa', 'value': 'IA'},
               {'label': 'Idaho', 'value': 'ID'}, 
@@ -600,10 +427,8 @@ def Make_State_Dict():
               {'label': 'Michigan', 'value': 'MI'},
               {'label': 'Minnesota', 'value': 'MN'}, 
               {'label': 'Missouri', 'value': 'MO'}, 
-              {'label': 'Northern Mariana Islands', 'value': 'MP'}, 
               {'label': 'Mississippi', 'value': 'MS'}, 
               {'label': 'Montana', 'value': 'MT'}, 
-              {'label': 'National', 'value': 'NA'},
               {'label': 'North Carolina', 'value': 'NC'}, 
               {'label': 'North Dakota', 'value': 'ND'}, 
               {'label': 'Nebraska', 'value': 'NE'}, 
@@ -616,7 +441,6 @@ def Make_State_Dict():
               {'label': 'Oklahoma', 'value': 'OK'}, 
               {'label': 'Oregon', 'value': 'OR'}, 
               {'label': 'Pennsylvania', 'value': 'PA'}, 
-              {'label': 'Puerto Rico', 'value': 'PR'}, 
               {'label': 'Rhode Island', 'value': 'RI'}, 
               {'label': 'South Carolina', 'value': 'SC'}, 
               {'label': 'South Dakota', 'value': 'SD'}, 
@@ -624,7 +448,6 @@ def Make_State_Dict():
               {'label': 'Texas', 'value': 'TX'}, 
               {'label': 'Utah', 'value': 'UT'}, 
               {'label': 'Virginia', 'value': 'VA'},
-              {'label': 'Virgin Islands', 'value': 'VI'}, 
               {'label': 'Vermont', 'value': 'VT'}, 
               {'label': 'Washington', 'value': 'WA'},
               {'label': 'Wisconsin', 'value': 'WI'},
@@ -635,134 +458,128 @@ def Make_State_Dict():
 
 #%%
 
-def Make_R_B_National_Scaled_c(df_election):
+def Make_R_B_National(df_election):
 
     
     df_election['positiveIncreasescale'] = df_election['positiveIncrease']/(df_election['Population']/1000000)
+    df_election['deathIncreasescale'] = df_election['deathIncrease']/(df_election['Population']/1000000)
     Cases = df_election.groupby(['date','2016 Won By'])['positiveIncreasescale'].sum().unstack().reset_index()
-    
-    
-    
+    Deaths = df_election.groupby(['date','2016 Won By'])['deathIncreasescale'].sum().unstack().reset_index()
     
     Roll_Avg(Cases, 'States Won By Clinton', [7,20],shift=False)
-
+    Roll_Avg(Deaths, 'States Won By Clinton', [7,20],shift=False)
     Roll_Avg(Cases, 'States Won By Trump', [7,20],shift=False)
-
+    Roll_Avg(Deaths, 'States Won By Trump', [7,20],shift=False)
 
     
     
-    fig = go.Figure()
-                        
+    fig = make_subplots(rows=1, cols=2,
+                    subplot_titles = ['Cases per Day'
+                                          , ' Deaths per Day'],
+                        )
 
 
     fig.add_trace(
         go.Line(x=Cases['date'],
                 y=Cases['States Won By Clinton'],
-                marker=dict(color='DodgerBlue'),
+                marker=dict(color=color['Clinton']),
                 line=dict(width=2),
+                legendgroup = 'solidC',
                 name='Won By Clinton'
-                )
+                ),row=1,col=1
         )
     
     fig.add_trace(
         go.Line(x=Cases['date'],
                 y=Cases['States Won By Trump'],
-                marker=dict(color='Red'),
+                marker=dict(color= color['Trump']),
                 line=dict(width=2),
+                legendgroup = 'solidT',
                 name='Won By Trump'
-                )
+                ),row=1,col=1
         )
     
     fig.add_trace(
         go.Line(x=Cases['date'],
                 y=Cases['roll_States Won By Clinton_7'],
-                marker=dict(color='DarkBlue'),
-                line=dict(width=2, dash ='dot'),
+                marker=dict(color= color['Clinton7']),
+                line=dict(width=2, dash ='dash'),
+                legendgroup = 'dashC',
                 name='Clinton 7-Day Avg.'
-                )
+                ),row=1,col=1
         )
 
     fig.add_trace(
         go.Line(x=Cases['date'],
                 y=Cases['roll_States Won By Trump_7'],
-                marker=dict(color='DarkRed'),
-                line=dict(width=2, dash ='dot'),
+                marker=dict(color= color['Trump7']),
+                line=dict(width=2, dash ='dash'),
+                legendgroup = 'dashT',
                 name='Trump 7-Day Avg'
-                )
+                ),row=1,col=1
         )
 
+    fig.update_yaxes(title_text="New Cases")
+ 
+    fig.update_xaxes(title_text="Date")
 
-    
-    fig.update_layout(height=500, width=600,
-                title_text="Red v Blue States Cases Per 1M Population",
-                    legend=dict(
-                               yanchor="top",
-                               y=0.99,
-                               xanchor="left",
-                               x=0.01,),
-                    )
-    return fig
-
-def Make_R_B_National_Scaled_d(df_election):
-    
-    df_election['deathIncreasescale'] = df_election['deathIncrease']/(df_election['Population']/1000000)
-    Deaths = df_election.groupby(['date','2016 Won By'])['deathIncreasescale'].sum().unstack().reset_index()
-    
-    Roll_Avg(Deaths, 'States Won By Clinton', [7,20],shift=False)
-    Roll_Avg(Deaths, 'States Won By Trump', [7,20],shift=False)
-    
-    fig = go.Figure()
     
     fig.add_trace(
         go.Line(x=Deaths['date'],
                 y=Deaths['States Won By Clinton'],
-                marker=dict(color='DodgerBlue'),
+                marker=dict(color=color['Clinton']),
                 line=dict(width=2),
                 showlegend=False,
+                legendgroup = 'solidC',
                 name='Won By Clinton'
-                )
+                ),row=1,col=2
         )
 
 
     fig.add_trace(
         go.Line(x=Deaths['date'],
                 y=Deaths['States Won By Trump'],
-                marker=dict(color='Red'),
+                marker=dict(color=color['Trump']),
                 line=dict(width=2),
                 showlegend=False,
+                legendgroup = 'solidT',
                 name='Won By Trump'
-                )
+                ),row=1,col=2
         )
 
     fig.add_trace(
         go.Line(x=Deaths['date'],
                 y=Deaths['roll_States Won By Clinton_7'],
-                marker=dict(color='DarkBlue'),
-                line=dict(width=2, dash ='dot'),
+                marker=dict(color=color['Clinton7']),
+                line=dict(width=2, dash ='dash'),
                 showlegend=False,
+                legendgroup = 'dashC',
                 name='Clinton 7-Day Avg'
-                )
+                ),row=1,col=2
         )
 
     fig.add_trace(
         go.Line(x=Deaths['date'],
                 y=Deaths['roll_States Won By Trump_7'],
-                marker=dict(color='DarkRed'),
-                line=dict(width=2, dash ='dot'),
+                marker=dict(color=color['Trump7']),
+                line=dict(width=2, dash ='dash'),
                 showlegend=False,
+                legendgroup = 'dashT',
                 name='Trump 7-Day Avg'
-                )
+                ),row=1,col=2
         )
 
-    fig.update_layout(height=500, width=600,
+    fig.update_layout(
                 title_text="Red v Blue States Deaths Per 1M Population",
-                    legend=dict(
+                title_x = 0.5,
+                xaxis_title='Date',
+                yaxis_title='New Deaths',                
+                legend=dict(
                                yanchor="top",
                                y=0.99,
                                xanchor="left",
                                x=0.01,),
                     )
-
     return fig 
 
 
@@ -977,3 +794,107 @@ def States_Won(df):
     df_election['2016 Won By'] = df_election['2016 Won By'].apply(lambda x: 'States Won By '+str(x))
 
     return df_election
+
+#%%
+
+def Make_R_B_Sum (df_election) :
+    
+    R_B_national_cases = df_election.groupby(['date','2016 Won By']).sum()['positiveIncrease'].unstack().reset_index()
+    R_B_national_cases=R_B_national_cases.set_index('date').cumsum().reset_index()
+    
+
+    fig = make_subplots(rows=1, cols=2,
+                    subplot_titles = ['R v B States Total Cases'
+                                          , 'R v B States Total Deaths'],
+                        )
+    
+    fig.add_trace(
+        go.Line(x=R_B_national_cases['date'],
+                y=R_B_national_cases['States Won By Clinton'],
+                marker=dict(color= color['Clinton']),
+                line=dict(width=4),
+                legendgroup='Blue',
+                name='Blue States Total'
+                ),row=1 , col=1
+    )
+    
+    fig.add_trace(
+        go.Line(x=R_B_national_cases['date'],
+                y=R_B_national_cases['States Won By Trump'],
+                marker=dict(color= color['Trump']),
+                line=dict(width=4),
+                legendgroup='Red',
+                name='Red States Total'
+                ),row=1 , col=1
+    )
+    
+       
+
+    fig.update_yaxes(title_text="Total Cases")
+ 
+    fig.update_xaxes(title_text="Date")
+    
+    R_B_national_deaths = df_election.groupby(['date','2016 Won By']).sum()['deathIncrease'].unstack().reset_index()
+    R_B_national_deaths= R_B_national_deaths.set_index('date').cumsum().reset_index()
+
+    
+
+
+    fig.add_trace(
+        go.Line(x=R_B_national_deaths['date'],
+                y=R_B_national_deaths['States Won By Clinton'],
+                marker=dict(color= color['Clinton']),
+                #showlegend=False,
+                line=dict(width=4),
+                legendgroup='Blue',
+                showlegend=False,
+                name='Blue States Deaths Total'
+                ),row=1 , col=2
+    )
+    
+    fig.add_trace(
+        go.Line(x=R_B_national_deaths['date'],
+                y=R_B_national_deaths['States Won By Trump'],
+                marker=dict(color= color['Trump']),
+                #showlegend=False,
+                line=dict(width=4),
+                legendgroup='Red',
+                showlegend=False,
+                name='Red States Deaths Total'
+                ),row=1 , col=2
+    )
+        
+    fig.update_layout(
+                title_text="Red v Blue States Total Cases & Deaths",
+                title_x = 0.5,
+                xaxis_title='Date',
+                yaxis_title='Totakl Deaths',                
+                legend=dict(
+                               yanchor="top",
+                               y=0.99,
+                               xanchor="left",
+                               x=0.01,),
+                    )
+
+    return fig 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
