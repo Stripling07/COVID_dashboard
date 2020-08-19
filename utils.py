@@ -233,7 +233,7 @@ def Make_State(df,state_of_choice):
     )
     
     
-    fig.update_yaxes(title_text="New Cases")
+    fig.update_yaxes(title_text="New Deaths")
  
     fig.update_xaxes(title_text="Date")
     
@@ -276,7 +276,7 @@ def Make_State(df,state_of_choice):
                 title_text= str(state_of_choice) + " Cases and Deaths",
                 title_x = 0.5,
                 xaxis_title='Date',
-                yaxis_title='New Deaths',                
+                yaxis_title='New Cases',                
                 legend=dict(
                                yanchor="top",
                                y=0.99,
@@ -334,7 +334,7 @@ def Make_National(df) :
         
     )
 
-    fig.update_yaxes(title_text="New Cases")
+    fig.update_yaxes(title_text="New Deaths")
  
     fig.update_xaxes(title_text="Date")
 
@@ -387,7 +387,7 @@ def Make_National(df) :
                 title_text="National Cases and Deaths",
                 title_x = 0.5,
                 xaxis_title='Date',
-                yaxis_title='New Deaths',                
+                yaxis_title='New Cases',                
                 legend=dict(
                                yanchor="top",
                                y=0.99,
@@ -519,7 +519,7 @@ def Make_R_B_National(df_election):
                 ),row=1,col=1
         )
 
-    fig.update_yaxes(title_text="New Cases")
+    fig.update_yaxes(title_text="New Deaths")
  
     fig.update_xaxes(title_text="Date")
 
@@ -573,7 +573,7 @@ def Make_R_B_National(df_election):
                 title_text="Red v Blue States Deaths Per 1M Population",
                 title_x = 0.5,
                 xaxis_title='Date',
-                yaxis_title='New Deaths',                
+                yaxis_title='New Cases',                
                 legend=dict(
                                yanchor="top",
                                y=0.99,
@@ -830,7 +830,7 @@ def Make_R_B_Sum (df_election) :
     
        
 
-    fig.update_yaxes(title_text="Total Cases")
+    fig.update_yaxes(title_text="Total Deaths")
  
     fig.update_xaxes(title_text="Date")
     
@@ -868,7 +868,7 @@ def Make_R_B_Sum (df_election) :
                 title_text="Red v Blue States Total Cases & Deaths",
                 title_x = 0.5,
                 xaxis_title='Date',
-                yaxis_title='Totakl Deaths',                
+                yaxis_title='Total Cases',                
                 legend=dict(
                                yanchor="top",
                                y=0.99,
