@@ -53,6 +53,10 @@ df.drop(columns=drop, inplace=True)
 # clean up bad data point, I found the actual number from NJ.gov website (was 1877)
 df.loc[(df['date']=='2020-06-25') & (df['state']=='NJ'),'deathIncrease']=23
 
+#clean up bad data point in RI 
+df.loc[(df['date']=='2020-08-08') & (df['state']=='RI'),'positiveIncrease']=0
+df.loc[(df['date']=='2020-08-10') & (df['state']=='RI'),'positiveIncrease']=196
+
 #list columns that shouldn't have negative values
 greater_than_zero = ['positive', 'negative', 'inIcuCurrently',
        'inIcuCumulative', 'death', 'hospitalized', 'deathConfirmed',
