@@ -14,6 +14,7 @@ import dash_html_components as html
 import plotly.graph_objects as go
 import pandas as pd
 import requests
+import datetime as dt
 from plotly.graph_objs.scatter.marker import Line
 
 
@@ -30,6 +31,82 @@ color = {
     'Trump7': 'FireBrick'
     
 }
+
+
+
+#%%
+
+def Make_Update():
+    
+    return [html.P('Last Updated: ' + str(dt.datetime.now().strftime("%m/%d/%y %H:%M (MT)")))]
+#%%  Load the data from covidtracking API
+
+
+def Get_Data():
+    
+   
+    
+    url = 'https://covidtracking.com/api/v1/states/daily.json'
+    
+    r = requests.get(url)
+    
+    json_data = r.json()
+    
+    df = pd.json_normalize(json_data)
+    
+    ### Add calculate various relations of the data and add them as columns
+    
+    df['DperP'] = df['death']/df['positive']  # Add columns Deaths per Positive case (DperP), Positive per Test (PosPerTest),  
+    
+    df['PosPerTest']= df['positiveIncrease']/df['totalTestResultsIncrease']*100  # Positives per test in percentage
+    
+    df['date'] = pd.to_datetime(df['date'], format = '%Y%m%d') #convert date to datetime object and set as index
+    df.set_index('date')
+    
+    df = df[df['date'] >= '2020-03-01']
+    # Drop all unused columns. 
+    
+    drop = ['pending',
+            'hospitalizedCurrently', 'hospitalizedCumulative', 'onVentilatorCurrently',
+            'onVentilatorCumulative','recovered', 'dataQualityGrade', 'lastUpdateEt',
+            'dateModified','checkTimeEt', 'dateChecked','totalTestsViral', 'positiveTestsViral',
+            'negativeTestsViral','positiveCasesViral', 'fips','posNeg','hash', 'commercialScore',
+            'negativeRegularScore', 'negativeScore', 'positiveScore', 'score','grade']
+    
+    df.drop(columns=drop, inplace=True)
+    
+        
+    # clean up bad data point, I found the actual number from NJ.gov website (was 1877)
+    df.loc[(df['date']=='2020-06-25') & (df['state']=='NJ'),'deathIncrease']=23
+    
+    #clean up bad data point in RI 
+    df.loc[(df['date']=='2020-08-08') & (df['state']=='RI'),'positiveIncrease']=0
+    df.loc[(df['date']=='2020-08-10') & (df['state']=='RI'),'positiveIncrease']=196
+    
+    #list columns that shouldn't have negative values
+    greater_than_zero = ['positive', 'negative', 'inIcuCurrently',
+           'inIcuCumulative', 'death', 'hospitalized', 'deathConfirmed',
+           'deathProbable', 'positiveIncrease', 'negativeIncrease', 'total',
+           'totalTestResults', 'totalTestResultsIncrease', 'deathIncrease',
+           'hospitalizedIncrease', 'DperP', 'PosPerTest']
+    
+    # Replace negative value with 0
+    for item in greater_than_zero :
+        df[item].clip(lower=0,inplace=True)
+    
+    
+    df['yadda'] = df['inIcuCumulative'].shift(-1)
+    
+    # iterate through the rows to calculate daily increase in ICU cases
+    for row in df.iterrows() :
+        df['icuIncrease'] = df['inIcuCumulative'] - df['yadda']
+        
+    df= States_Won(df)
+    df= State_Pop(df)
+
+   
+    
+    return df
 
 #%%
 
@@ -62,11 +139,11 @@ def State_Subset(df,state_abbrev, start_date = '2020-03-01') :
 #%%
 
 def Make_Test_Plot(df,state_of_choice) :
-
-
+    
     
     #subset the state of interest
     new_df = State_Subset(df,state_of_choice)
+    
     interval = [7,20]#sets the intervals for the rolling averages
     
     ## Calculate the ROlling averages of features of interest
@@ -160,8 +237,9 @@ def Make_Test_Plot(df,state_of_choice) :
     )
     
     # Setup the layout of legend and title 
-    fig.update_layout(height=700, width=1000,title= str(state_of_choice) + ' Tests and Infection Rate',
-                      title_x=0.5, 
+    fig.update_layout(height=700, width=1000,title=dict(text= str(state_of_choice) + ' Tests and Infection Rate',
+                      x=0.5,
+                      font=dict(size=24)),
                       legend=dict(
                                yanchor="top",
                                y=0.99,
@@ -273,8 +351,9 @@ def Make_State(df,state_of_choice):
     
 
     fig.update_layout(
-                title_text= str(state_of_choice) + " Cases and Deaths",
-                title_x = 0.5,
+                title=dict(text= str(state_of_choice) + " Cases and Deaths",
+                font=dict(size=24),
+                x = 0.5),
                 xaxis_title='Date',
                 yaxis_title='New Cases',                
                 legend=dict(
@@ -344,7 +423,6 @@ def Make_National(df) :
     national_deaths['date'] = national_deaths.date.dt.strftime('%Y-%m-%d')
     Roll_Avg(national_deaths, 'deathIncrease', [7,20],shift=False)
     
-    # print(national_cases['date'], national_cases['positiveIncrease'])
 
     
     fig.add_trace(
@@ -384,8 +462,9 @@ def Make_National(df) :
     )
         
     fig.update_layout(
-                title_text="National Cases and Deaths",
-                title_x = 0.5,
+                title= dict(text ="National Cases & Deaths",
+                font=dict(size=24),
+                x = 0.5),
                 xaxis_title='Date',
                 yaxis_title='New Cases',                
                 legend=dict(
@@ -570,8 +649,10 @@ def Make_R_B_National(df_election):
         )
 
     fig.update_layout(
-                title_text="Red v Blue States Deaths Per 1M Population",
-                title_x = 0.5,
+                title=dict(text="Red v Blue States Cases & Deaths Per 1M Population",
+                font={'size':24},
+                x = 0.5),
+    
                 xaxis_title='Date',
                 yaxis_title='New Cases',                
                 legend=dict(
@@ -865,8 +946,9 @@ def Make_R_B_Sum (df_election) :
     )
         
     fig.update_layout(
-                title_text="Red v Blue States Total Cases & Deaths",
-                title_x = 0.5,
+                title= dict(text="Red v Blue States Total Cases & Deaths",
+                        font={'size':24},
+                        x = 0.5),
                 xaxis_title='Date',
                 yaxis_title='Total Cases',                
                 legend=dict(

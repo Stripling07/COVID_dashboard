@@ -11,81 +11,24 @@ import dash_core_components as dcc
 import dash_html_components as html
 import plotly.graph_objects as go
 import pandas as pd
+import datetime as dt
 import requests
+import json
 from utils import *
+from dash.dependencies import Input, Output
 
 from plotly.subplots import make_subplots
 
 
-
-#%%  Load the data from covidtracking API
-
-url = 'https://covidtracking.com/api/v1/states/daily.json'
-
-r = requests.get(url)
-
-json_data = r.json()
-
-df = pd.json_normalize(json_data)
-
-### Add calculate various relations of the data and add them as columns
-
-df['DperP'] = df['death']/df['positive']  # Add columns Deaths per Positive case (DperP), Positive per Test (PosPerTest),  
-
-df['PosPerTest']= df['positiveIncrease']/df['totalTestResultsIncrease']*100  # Positives per test in percentage
-
-df['date'] = pd.to_datetime(df['date'], format = '%Y%m%d') #convert date to datetime object and set as index
-df.set_index('date')
-
-df = df[df['date'] >= '2020-03-01']
-# Drop all unused columns. 
-
-drop = ['pending',
-        'hospitalizedCurrently', 'hospitalizedCumulative', 'onVentilatorCurrently',
-        'onVentilatorCumulative','recovered', 'dataQualityGrade', 'lastUpdateEt',
-        'dateModified','checkTimeEt', 'dateChecked','totalTestsViral', 'positiveTestsViral',
-        'negativeTestsViral','positiveCasesViral', 'fips','posNeg','hash', 'commercialScore',
-        'negativeRegularScore', 'negativeScore', 'positiveScore', 'score','grade']
-
-df.drop(columns=drop, inplace=True)
-
-    
-# clean up bad data point, I found the actual number from NJ.gov website (was 1877)
-df.loc[(df['date']=='2020-06-25') & (df['state']=='NJ'),'deathIncrease']=23
-
-#clean up bad data point in RI 
-df.loc[(df['date']=='2020-08-08') & (df['state']=='RI'),'positiveIncrease']=0
-df.loc[(df['date']=='2020-08-10') & (df['state']=='RI'),'positiveIncrease']=196
-
-#list columns that shouldn't have negative values
-greater_than_zero = ['positive', 'negative', 'inIcuCurrently',
-       'inIcuCumulative', 'death', 'hospitalized', 'deathConfirmed',
-       'deathProbable', 'positiveIncrease', 'negativeIncrease', 'total',
-       'totalTestResults', 'totalTestResultsIncrease', 'deathIncrease',
-       'hospitalizedIncrease', 'DperP', 'PosPerTest']
-
-# Replace negative value with 0
-for item in greater_than_zero :
-    df[item].clip(lower=0,inplace=True)
-
-
-df['yadda'] = df['inIcuCumulative'].shift(-1)
-
-# iterate through the rows to calculate daily increase in ICU cases
-for row in df.iterrows() :
-    df['icuIncrease'] = df['inIcuCumulative'] - df['yadda']
-
-df= States_Won(df)
-df= State_Pop(df)
-
 States = Make_State_Dict()
 
-
+df = Get_Data()
 
 #%%
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+app.config['suppress_callback_exceptions'] = True
 #application=app.server
 server = app.server
 colors = {
@@ -97,13 +40,13 @@ colors = {
     
 }
 
-
-
     
-
 #%%
 
 app.layout = html.Div([ 
+    dcc.Interval(id='get_data_interval',
+                 interval = 1 * 30000,
+                 n_intervals=0),
    
     html.H1(
         children='COVID Tracking',
@@ -114,15 +57,55 @@ app.layout = html.Div([
             }
         ),
     
-    
-    html.A('By: David R McKenna',href = 'http://www.linkedin.com/in/david-r-mckenna',
+
+   html.Div([
+           html.H2('By: David R McKenna',
+                  style={
+                      'textAlign': 'left',
+                      'color': colors['text'],
+                      'fontSize':26
+                
+                 },
+                  ),
+           ]),
+    html.Div(children = Make_Update(),
+           id= 'update',
              style={
-                 'textAlign': 'center',
-                 'color': colors['text']
+                 'textAlign': 'left',
+                 'color': colors['background']
                  }
-             ),
+             ),          
+
+   html.Div([  
+           html.H5('Open to Opportunities',
+                   style={
+                       'textAlign': 'left',
+                       'color': 'Green'}),
+           html.A('Please ',
+                       style={
+                           'textAlign': 'left',
+                           'color': 'Black'}),           
+                
+            html.A('Email ',href = 'mailto:david.r.mckenna.55@gmail.com',
+                           style={
+                               'textAlign': 'left',
+                               'color': 'DodgerBlue',
+                             }),
+            html.A('or ',
+                       style={
+                           'textAlign': 'left',
+                           'color': 'Black',
+                           }),        
+           html.A('LinkedIn',href = 'http://www.linkedin.com/in/david-r-mckenna',
+                   style={
+                       'textAlign': 'left',
+                       'color': 'DodgerBlue'})        
+           ]),
     
-        html.H2('National Outlook:',style={
+
+
+    
+    html.H2('National Outlook:',style={
         'textAlign': 'left',
         'width' : '49%',
         'color': colors['text_sec']}
@@ -171,8 +154,10 @@ app.layout = html.Div([
             'margin-bottom':'auto'
             }
         ),
-
-
+    
+        html.Div(id='Update_df', style={'display': 'none'}),
+        
+        
         html.H2('State Outlook:',style={
         'textAlign': 'left',
         'width' : '49%',
@@ -244,24 +229,64 @@ app.layout = html.Div([
 
 
 
+@app.callback(
+    Output('Update_df', 'children'),
+    [Input('get_data_interval', 'n_intervals')])
+def Update_Data(n):
+     # an expensive query step
+     updated_df = Get_Data()
+
+
+
+     return updated_df.to_json(date_format='iso', orient='split')
+
 @app.callback([
-    dash.dependencies.Output('Test_Plot','figure'),
-    dash.dependencies.Output('State','figure'), 
+    Output('Nat','figure'),
+    Output('R_B','figure'),
+    Output('R_B_Sum','figure'),
+    Output('update','children')],
+    [Input('Update_df', 'children')])
+def update_Nat(json_updated_df):
+    dataset = json.loads(json_updated_df)
+    dff = pd.read_json(json_updated_df, orient='split')
+    
+    return (
+       
+        Make_National(dff),
+        
+        Make_R_B_National(dff),
+        
+        Make_R_B_Sum(dff),
+    
+        Make_Update()
+        )
+
+
+
+
+@app.callback([
+    Output('Test_Plot','figure'),
+    Output('State','figure'), 
         ],
-    [dash.dependencies.Input('States Dropdown', 'value')]
+    [Input('States Dropdown', 'value'),
+     Input('Update_df','children')]
     )
 
-def Update_State_Plots(value):
+
+def Update_State_Plots(value,jsonified_cleaned_data):
     state_of_choice = value
+    
+    dataset = json.loads(jsonified_cleaned_data)
+    dff = pd.read_json(jsonified_cleaned_data, orient='split')
+
     return (
-        Make_Test_Plot(df,state_of_choice),
+       
+        Make_Test_Plot(dff,state_of_choice),
         
-   
-        Make_State(df,state_of_choice),
+        Make_State(dff,state_of_choice),
     
         )
  
-
 
 
 
