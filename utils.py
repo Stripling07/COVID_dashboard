@@ -82,6 +82,8 @@ def Get_Data():
     #clean up bad data point in RI 
     df.loc[(df['date']=='2020-08-08') & (df['state']=='RI'),'positiveIncrease']=0
     df.loc[(df['date']=='2020-08-10') & (df['state']=='RI'),'positiveIncrease']=196
+    #Bad Data Point 8-26 in WI
+    df.loc[(df['date']=='2020-08-26') & (df['state']=='WI'),'positiveIncrease']=768
     
     #list columns that shouldn't have negative values
     greater_than_zero = ['positive', 'negative', 'inIcuCurrently',
