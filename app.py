@@ -45,7 +45,7 @@ colors = {
 
 app.layout = html.Div([ 
     dcc.Interval(id='get_data_interval',
-                 interval = 1 * 30000,
+                 interval = 1 * 3600000,
                  n_intervals=0),
    
     html.H1(
@@ -125,6 +125,34 @@ app.layout = html.Div([
             }
         ),
 
+
+    html.Div([
+        dcc.Graph(id='Top_10', figure = Make_Top_Ten(df))
+        ],
+        style={
+
+            'height': 500,
+            'width': 1200,
+            "display": "block",
+            "margin-left": "auto",
+            "margin-right": "auto",
+            'margin-bottom':'auto'
+            }
+        ),
+
+    html.Div([
+        dcc.Graph(id='Nat_Test_Plot', figure = Make_National_Test_Plot(df))
+        ],
+        style={
+
+            'height': 550,
+            'width': 900,
+            "display": "block",
+            "margin-left": "auto",
+            "margin-right": "auto",
+            'margin-bottom':100
+            }
+        ),
 
     html.Div([
         dcc.Graph(id='R_B', figure = Make_R_B_National(df))
@@ -242,6 +270,8 @@ def Update_Data(n):
 
 @app.callback([
     Output('Nat','figure'),
+    Output('Nat_Test_Plot','figure'),
+    Output('Top_10','figure'),
     Output('R_B','figure'),
     Output('R_B_Sum','figure'),
     Output('update','children')],
@@ -253,6 +283,10 @@ def update_Nat(json_updated_df):
     return (
        
         Make_National(dff),
+        
+        Make_National_Test_Plot(dff),
+        
+        Make_Top_Ten(dff),
         
         Make_R_B_National(dff),
         

@@ -962,6 +962,199 @@ def Make_R_B_Sum (df_election) :
 
     return fig 
 
+#%%
+
+def Make_Top_Ten(df) :
+
+    df_top = df[['state','date','positiveIncrease','deathIncrease','totalTestResultsIncrease','Population']].reset_index()
+
+    today = df_top.date.max()
+
+    df_top['Date'] = pd.to_datetime(df_top['date'], format= '%Y%m%d')
+    df_top.set_index(['state','Date'],inplace=True)
+    df_top.sort_index(inplace=True)
+
+
+    df_top['PosIncScaled'] = df_top['positiveIncrease'] / (df_top['Population']/1000000)
+    df_top['TestIncScaled'] = df_top['totalTestResultsIncrease'] / (df_top['Population']/1000000)
+
+    df_top['PosDiffScaled_m'] = df_top.groupby(level='state')['PosIncScaled'].apply(lambda x: (x.rolling(10).mean()))
+    df_top['TestIncScaled_m'] = df_top.groupby(level='state')['TestIncScaled'].apply(lambda x: (x.rolling(10).mean()))
+
+
+
+    largest = df_top[df_top['date']==today]['PosDiffScaled_m'].nlargest(10).astype(int)
+    largest
+    df_top_c = pd.DataFrame(largest).reset_index().sort_index(ascending=False)
+
+    states = list(df_top_c.state)
+
+    df_top.reset_index(inplace=True)
+    df_top_t = df_top[(df_top['date']==today) & (df_top['state'].isin(states))]
+    df_top_t = df_top_t.sort_values(by=['PosDiffScaled_m'],ascending=True)
+
+    fig = make_subplots(rows=1, cols=2,
+                    subplot_titles = ['States With Most Daily Cases (per Capita)'
+                                          , 'Per Capita Testing'],
+                        )
+    
+    fig.add_trace(
+        go.Bar(x= df_top_c['PosDiffScaled_m'],
+                y= df_top_c['state'],
+                orientation = 'h',
+                marker=dict(color=color['Clinton']),
+                showlegend=False,
+                name= '10-Day Avg Cases per Day'
+                ),row=1,col=1)
+
+
+ 
+    fig.update_xaxes(title_text="10-Day Avg Tests per 1M"),    
+
+    
+    fig.add_trace(
+        go.Bar(x= df_top_t['TestIncScaled_m'],
+                y= df_top_t['state'],
+                marker=dict(color=color['20-day']),
+                legendgroup = 'Bar',
+                orientation = 'h',
+                showlegend=False,
+                
+                name='10-Day Avg Tests per Day'
+                ),row=1, col=2
+    )
+    
+
+        
+    fig.update_layout(
+                title= dict(text ="Per Capita Hotspots",
+                font=dict(size=24),
+                x = 0.5),
+                xaxis_title='10-Day Avg Cases per 1M'),
+                
+    
+    return fig
+
+#%%
+
+def Make_National_Test_Plot(df) :
+    
+    national_test = df.groupby('date')['totalTestResultsIncrease'].sum().reset_index()
+
+    national_test['date'] = national_test.date.dt.strftime('%Y-%m-%d')
+    Roll_Avg(national_test, 'totalTestResultsIncrease', [7],shift=False)
+
+    national_case = df.groupby('date')['positiveIncrease'].sum().reset_index()
+
+    national_case['date'] = national_case.date.dt.strftime('%Y-%m-%d')
+    Roll_Avg(national_case, 'positiveIncrease', [7],shift=False)
+
+    National = national_case.merge(national_test, on = 'date')
+
+    National['PosPerTest'] = (National['positiveIncrease']/National['totalTestResultsIncrease'])*100
+    Roll_Avg(National, 'PosPerTest', [7],shift=False)
+    
+    #Create Plotly figure objects
+    fig = go.Figure()
+    fig = make_subplots(specs=[[{"secondary_y": True}]])#secondary y scale for infection rate
+    
+    # Add barplot of total tests per day
+    fig.add_trace(
+        go.Bar(x=National['date'],
+               y=National['totalTestResultsIncrease'],
+               marker=dict(color=color['Bar']),
+               name='Total Tests',
+               legendgroup = 'Tests',
+               offsetgroup=0
+               ),
+        secondary_y=False
+               
+    )
+    
+    # Add barplotof positive tests per day
+    fig.add_trace(
+        go.Bar(x=National['date'],
+               y=National['positiveIncrease'],
+               marker=dict(color=color['Bar2']),
+               name='Positive Tests',
+               offsetgroup=0,
+               legendgroup = 'Cases'
+               ),
+        secondary_y=False
+               
+    )
+    
+    #Rolling average trace of testing 
+    fig.add_trace(
+        go.Line(x=National['date'],
+                y=National['roll_totalTestResultsIncrease_7'],
+                marker=dict(color='Black'),
+                line=dict(width=2),
+                name='7-Day Average',
+                legendgroup = 'Tests'
+                ),
+        secondary_y=False
+                
+        
+    )
+    
+    # Rolling average line of positive tests
+    fig.add_trace(
+        go.Line(x=National['date'],
+                y=National['roll_positiveIncrease_7'],
+                marker=dict(color='FireBrick'),
+                line=dict(width=2),
+                name='7-Day Average',
+                legendgroup = 'Cases'
+                ),
+        secondary_y=False
+                
+        
+    )
+    
+    # Scatter of d=Infection Rate
+    fig.add_trace(
+        go.Scatter(x=National['date'],
+                y=National['PosPerTest'],
+                mode='markers',
+                marker=dict(color='Green',size=7),
+                name='Infection Rate',
+                legendgroup = 'Infection'
+                ),
+        secondary_y=True           
+                
+        
+    )
+    
+    # Rolling average of Infection Rate
+    fig.add_trace(
+        go.Line(x=National['date'],
+                y=National['roll_PosPerTest_7'],
+                marker=dict(color='forestgreen'),
+                line=dict(width=3),
+                name='7-Day Average Infection Rate',
+                legendgroup = 'Infection'
+                ),
+        secondary_y=True
+    )
+    
+    # Setup the layout of legend and title 
+    fig.update_layout(height=700, width=1000,title=dict(text= 'National Tests and Infection Rate',
+                      x=0.5,
+                      font=dict(size=24)),
+                      legend=dict(
+                               yanchor="top",
+                               y=0.99,
+                               xanchor="left",
+                               x=0.01,),
+                      yaxis2_showgrid=False
+                             
+    )
+    # Update Axis labels and range
+    fig.update_yaxes(title_text="Tests", secondary_y=False)
+    fig.update_yaxes(title_text="Infection Rate (%)",secondary_y=True, range=[0,30]) 
+    fig.update_xaxes(title_text="Date")
+    return fig
 
 
 
